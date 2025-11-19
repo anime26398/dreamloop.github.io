@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DreamLoop | Controllable Cinemagraph Generation from a Single Photograph</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #05060d;
+        --bg-alt: #101223;
+        --surface: #161831;
+        --surface-alt: #1e203d;
+        --text: #f8f9fb;
+        --muted: #a0a5c1;
+        --accent: #8f7afe;
+        --accent-soft: rgba(143, 122, 254, 0.15);
+        --border: rgba(255, 255, 255, 0.08);
+        --max-width: 1080px;
+        --radius-lg: 32px;
+        --radius-md: 20px;
+        --radius-sm: 12px;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background-color: var(--bg);
+        line-height: 1.6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top left, #1b1d3a, #05060d);
+        color: var(--text);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(16px);
+        background: rgba(5, 6, 13, 0.85);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        /* justify-content: flex-start;
+        gap: 48px; */
+      }
+
+      .brand {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        box-shadow: 0 10px 30px rgba(143, 122, 254, 0.4);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav a {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--muted);
+        transition: color 0.2s ease;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        color: var(--text);
+      }
+
+      .hero {
+        padding: 120px 24px 80px;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: 48px;
+        align-items: start;
+      }
+
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .hero-eyebrow {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #b3b8d6;
+      }
+
+      .hero-title {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(2.4rem, 5vw, 3.7rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 18px 0 20px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+        color: var(--muted);
+        margin-bottom: 28px;
+        max-width: 480px;
+      }
+
+      .btn {
+        padding: 12px 22px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, background 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #0c0d17;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .btn:hover,
+      .btn:focus-visible {
+        transform: translateY(-2px);
+      }
+
+      .hero-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .hero-capsule-panel {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .hero-capsule-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 25% 20%,
+          rgba(143, 122, 254, 0.35),
+          transparent 65%
+        );
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .hero-capsule-panel > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .capsule-title {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #c4c6f5;
+      }
+
+      .capsule-grid-wrapper {
+        max-height: 340px;
+        overflow-y: auto;
+      }
+
+      .capsule-grid-wrapper::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .capsule-grid-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+      }
+
+      .capsule-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      }
+
+      .capsule-grid .btn {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 4px;
+        min-height: 82px;
+        text-align: left;
+        padding: 14px 18px;
+        line-height: 1.35;
+      }
+
+      .capsule-grid .btn .btn-heading {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .capsule-grid .btn .btn-subtitle {
+        font-size: 0.82rem;
+        color: rgba(239, 240, 255, 0.76);
+      }
+
+      main {
+        padding: 0 24px 120px;
+      }
+
+      section {
+        max-width: var(--max-width);
+        margin: 0 auto 90px;
+        scroll-margin-top: 120px;
+      }
+
+      .section-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .section-heading-top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .section-heading span {
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 0.75rem;
+        color: #8187a8;
+      }
+
+      .section-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 18px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #07111b;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 12px 32px rgba(143, 122, 254, 0.35);
+        text-transform: uppercase;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 640px;
+      }
+
+      .showcase-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      #study .study-figure {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        padding: 16px;
+        max-width: 800px;
+        margin: 24px auto 0;
+      }
+
+      #study .study-figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: var(--radius-sm);
+      }
+
+      #study .study-figure figcaption {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .card .label {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #858ac0;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .media-pair {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .media-box {
+        background: var(--surface-alt);
+        border-radius: var(--radius-sm);
+        min-height: 0;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        display: grid;
+        place-items: center;
+        color: #6f7498;
+        font-size: 0.78rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .media-box span {
+        z-index: 1;
+      }
+
+      .media-box img,
+      .media-box video {
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        object-fit: cover;
+        border-radius: inherit;
+        background: #000;
+      }
+
+      .instruction {
+        position: relative;
+        border-radius: var(--radius-sm);
+        background: rgba(143, 122, 254, 0.12);
+        border: 1px solid rgba(143, 122, 254, 0.25);
+        color: #c9c5ff;
+        font-size: 0.92rem;
+        padding: 16px 18px;
+        font-weight: 600;
+        cursor: default;
+        overflow: visible;
+      }
+
+      .instruction-text {
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .instruction::after {
+        content: attr(data-full-text);
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 12px);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(6px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        background: rgba(24, 26, 52, 0.96);
+        color: #f6f5ff;
+        padding: 16px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        box-shadow: 0 18px 40px rgba(8, 10, 30, 0.45);
+        z-index: 5;
+        line-height: 1.6;
+        display: block;
+        white-space: normal;
+        max-width: 360px;
+      }
+
+      .instruction:hover::after {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .video-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .video-card h4 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .video-placeholder {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        background: rgba(20, 24, 48, 0.5);
+        overflow: hidden;
+      }
+
+      .video-placeholder video,
+      .video-placeholder img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .comparison-tag {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        /* text-transform: uppercase; */
+        color: #f6f6ff;
+        pointer-events: none;
+      }
+
+      .table-wrapper {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+
+      thead {
+        background: rgba(143, 122, 254, 0.12);
+      }
+
+      th,
+      td {
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .table-dash-top td {
+        border-top: 1px dashed rgba(255, 255, 255, 0.28);
+      }
+
+      .table-dash-bottom td {
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.28);
+      }
+
+      mark {
+        background: rgba(143, 122, 254, 0.2);
+        color: var(--text);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .method-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .method-card {
+        padding: 24px;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+
+      .footer-cta {
+        background: linear-gradient(135deg, rgba(143, 122, 254, 0.25), rgba(79, 195, 255, 0.25));
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        border-radius: var(--radius-lg);
+        padding: 48px;
+        text-align: center;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px 60px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .comparison-media img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .timing-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .timing-text {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+      }
+
+      .timing-media {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        background: rgba(20, 24, 48, 0.5);
+      }
+
+      .timing-media img,
+      .timing-media video {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .timing-media--full {
+        grid-column: 1 / -1;
+      }
+
+      .timing-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .timing-tag {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 12px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #f6f6ff;
+      }
+
+      .partial-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .partial-media {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        background: rgba(20, 24, 48, 0.5);
+      }
+
+      .partial-media img,
+      .partial-media video {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      #teaser .partial-grid {
+        grid-template-columns: minmax(260px, 0.38fr) repeat(3, minmax(0, 1fr));
+        grid-auto-rows: auto;
+        gap: 18px;
+        align-items: start;
+      }
+
+      #teaser .partial-media {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #teaser .partial-media:first-child {
+        grid-row: 1 / span 2;
+      }
+
+      #teaser .partial-media img,
+      #teaser .partial-media video {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      @media (max-width: 1024px) {
+        #teaser .partial-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-auto-rows: minmax(200px, 1fr);
+        }
+
+        #teaser .partial-media:first-child {
+          grid-row: auto;
+          grid-column: 1 / -1;
+          min-height: 260px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        #teaser .partial-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .timing-instruction {
+        display: block;
+      }
+
+      .partial-control-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      @media (max-width: 720px) {
+        .hero {
+          padding-top: 90px;
+        }
+
+        .hero-capsule-panel {
+          padding: 28px;
+        }
+
+        .capsule-grid .btn {
+          flex-basis: 100%;
+        }
+
+        nav ul {
+          display: none;
+        }
+
+        .media-pair {
+          gap: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="nav">
+        <a class="brand" href="#top">DreamLoop</a>
+        <nav>
+          <ul>
+            <li><a href="">Paper ID: 8738</a></li>
+            <li><a href="#">HomePage</a></li>
+            <!-- <li><a href="#overview">Overview</a></li> -->
+            <!-- <li><a href="#overview">Overview</a></li>
+            <li><a href="#cinemagraphs">Cinemagraphs</a></li>
+            <li><a href="#video-generation">Video Generation</a></li>
+            <li><a href="#image">Image Editing</a></li>
+            <li><a href="#methodology">Methodology</a></li>
+            <li><a href="#benchmark">Benchmark</a></li>
+            <li><a href="#study">User Study</a></li> -->
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="top">
+      <section id="overview" class="hero">
+        <div class="hero-content">
+          <!-- <div class="hero-eyebrow">Adobe Research & Partners</div> -->
+          <h1 class="hero-title">
+            DreamLoop:<span style="font-weight: 50;"> Controllable Cinemagraph Generation from a Single Photograph</span>
+          </h1>
+          <p class="hero-subtitle">
+            DreamLoop is a novel framework for generating <u><i>any domain</i></u> cinemagraphs from a single photograph, with <u><i>precise motion control</i></u>.
+          </p>
+        </div>
+
+        <div class="hero-capsule-panel">
+          <p class="capsule-title">Quick Links</p>
+          <div class="capsule-grid-wrapper">
+            <div class="capsule-grid">
+              <!-- <a class="btn btn-primary" href="#our_results"> -->
+              <a class="btn btn-secondary" href="#our_results">
+                <span class="btn-heading">Our Results (Controllable Cinemagraphs)</span>
+                <span class="btn-subtitle">DreamLoop controllable cinemagraph results showcase</span>
+              </a>
+              <a class="btn btn-secondary" href="#baseline-custom">
+                <span class="btn-heading">Comparisons - General Domain Cinemagraphs</span>
+                <span class="btn-subtitle">Baselines vs DreamLoop for general domain cinemagraphs</span>
+              </a>
+              <a class="btn btn-secondary" href="#timing">
+                <span class="btn-heading">Timing Control</span>
+                <span class="btn-subtitle">Fine-grained motion control with timing</span>
+              </a>
+              <a class="btn btn-secondary" href="#full-partial-control">
+                <span class="btn-heading">Partial vs Full Motion Control</span>
+                <span class="btn-subtitle">Effect of just providing initial motion hint</span>
+              </a>
+              <a class="btn btn-secondary" href="#limitations">
+                <span class="btn-heading">Limitations</span>
+                <span class="btn-subtitle">Failing scenarios for DreamLoop</span>
+              </a>
+              <a class="btn btn-secondary" href="#teaser">
+                <span class="btn-heading">Teaser Figure</span>
+                <span class="btn-subtitle">Paper teaser figrue assets</span>
+              </a>
+              <a class="btn btn-secondary" href="#vbench">
+                <span class="btn-heading">VBench Evaluation</span>
+                <span class="btn-subtitle">Quantitative results on general domain cinemagraphs</span>
+              </a>
+              <a class="btn btn-secondary" href="#study">
+                <span class="btn-heading">User Study</span>
+                <span class="btn-subtitle">Preference study on controllable general domain cinemagraphs</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="our_results">
+        <div class="section-heading">
+          <div class="section-heading-top">
+            <span>Controllable General Domain Cinemagraphs - Our Results</span>
+            <a class="section-pill" href="./our_results.html">More Results</a>
+          </div>
+          <h2>Cinemagraph Creation from Single Photograph with Motion Control</h2>
+          <p>
+            DreamLoop enables users to generates cinemagraphs from a single photograph with intuitive and easy-to-use, but precise motion control.
+          </p>
+        </div>
+
+        <div class="showcase-grid">
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251108_204031.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251108_204031.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A close-up shot of a person holding a DSLR camera. The person is trying to adjust the lens of the camera by rotating it. Everything else remains static in place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A close-up shot of a person holding a DSLR camera. The person is trying to adjust the lens of the camera by rotating it. Everything else remains static in place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+        
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251108_174137.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251108_174137.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A cat wiggling its tail while sitting still on a window counter top. The cat does not move its body and remains still in one place. The camera is completely static. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A cat wiggling its tail while sitting still on a window counter top. The cat does not move its body and remains still in one place. The camera is completely static. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251108_193019.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251108_193019.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251109_133042.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251109_133042.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A close-up shot of a table with a burger and a girl holding her phone. She remains in the same posture, static, only moving her thumb to swipe on her phone. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A close-up shot of a table with a burger and a girl holding her phone. She remains in the same posture, static, only moving her thumb to swipe on her phone. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251109_154936.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251109_154936.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A plastic toy sunflower in a field. The black and white checkered petals of the sunflower are rotating. Everything else remains static in its place. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A plastic toy sunflower in a field. The black and white checkered petals of the sunflower are rotating. Everything else remains static in its place. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/inputs_draw/20251108_221239.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/ours-v1p8-control/20251108_221239.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Prompt: A girl is sitting in a cafe, stirring her coffee in a glass. She remains stationary in her place and does not move. The camera is also stationary. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+            >
+              <span class="instruction-text">Prompt: A girl is sitting in a cafe, stirring her coffee in a glass. She remains stationary in her place and does not move. The camera is also stationary. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."</span>
+            </div>
+          </article>
+          
+
+        </div>
+      </section>
+
+      <section id="baseline-custom">
+        <div class="section-heading">
+            <div class="section-heading-top">
+                <span>Controllable General Domain Cinemagraphs - Comparisons</span>
+                <a class="section-pill" href="./comparison_custom.html">More Results</a>
+            </div>
+          <h2>Comparison of Our method with Baselines for Controllable General Domain Cinemagraphs</h2>
+          <p>
+            We compare our method (both with internal model and Wan2.2-5B) with baselines which include: I) Image-to-Video Models - CogVideoX and Wan2.2-5B (pretrained), II) Motion Controllable Image-to-Video Models - DragAnything, III) Our method with only first-last-frame conditioning.
+            For I) and II), we use post-processing to make the videos looping.
+          </p>
+        </div>
+
+        <div class="video-card">
+          <div
+            class="instruction"
+            data-full-text='Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20251108_193019.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-cogvideox-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-draganything/20251108_192101.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-base/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag"> Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-v1p8-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-control/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/ours-v1p8-control/20251108_193019.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="timing">
+        <div class="section-heading">
+            <div class="section-heading-top">
+              <span>Timing Control for Cinemagraphs</span>
+              <a class="section-pill" href="./timing_control.html">More Results</a>
+            </div>
+          <h2>Importance of Timing Control over Object Motion</h2>
+          <p>
+            DreamLoop provides additional control over the timing of object motion in cinemagraphs, precisely letting users define the duration of the motion for each action.
+          </p>
+        </div>
+
+        <article class="timing-card">
+          <div class="instruction timing-instruction" data-full-text='Prompt: A metallic ball is oscillating in a car hanging from the rear-view mirror with a thread. Everything else in the scene is completely static. The shot is taken with a static camera.'>
+            <span class="instruction-text">Prompt: “A metallic ball is oscillating in a car hanging from the rear-view mirror with a thread. Everything else in the scene is completely static. The shot is taken with a static camera..”</span>
+          </div>
+          <div class="instruction timing-instruction" data-full-text='Explanation: The metallic ball is oscillating in a Simple Harmonic Motion (SHM). The speed of motion near the equilibrium position is faster than the speed of motion near the extreme positions. We can achieve this effect by controlling the timing of the motion.'>
+            <span class="instruction-text">Explanation: The metallic ball is oscillating in a Simple Harmonic Motion (SHM). The speed of motion near the equilibrium position is faster than the speed of motion near the extreme positions. We can achieve this effect by controlling the timing of the motion.</span>
+          </div>
+          <div class="timing-media timing-media--full">
+            <!-- <span class="timing-tag">Reference Frame</span> -->
+            <img src="our_results/timing_control/input-3.png" alt="Reference frame for timed motion control">
+          </div>
+          <div class="timing-grid">
+            <div class="timing-media">
+              <span class="timing-tag">w/o Timing Control</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/timing_control/video-timing-30.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="timing-media">
+              <span class="timing-tag">w/ Timing Control</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/timing_control/video-timing-31.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="full-partial-control">
+        <div class="section-heading">
+            <div class="section-heading-top">
+              <span>Full vs Partial Control over Object Motion</span>
+              <a class="section-pill" href="./full_partial.html">More Results</a>
+            </div>
+          <h2>Full vs Partial Control over Object Motion</h2>
+          <p>
+            DreamLoop also works in cases where user does to provide the full motion path for all objects in the scene, but just the intial motion hint. The rest is inferred by the model.
+          </p>
+        </div>
+
+        <article class="partial-control-card">
+          <div class="instruction timing-instruction" data-full-text='Prompt: A girl is standing beside the window. She tries to move the curtain with her hand slowly, while keeping the same pose. Everything else remains stationary. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'>
+            <span class="instruction-text">Prompt: A girl is standing beside the window. She tries to move the curtain with her hand slowly, while keeping the same pose. Everything else remains stationary. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="partial-grid">
+            <div class="partial-media">
+              <span class="timing-tag">Full Input</span>
+              <img src="our_results/full_vs_partial/video-1-full.png" alt="Reference frame for partial control">
+            </div>
+            <div class="partial-media">
+              <span class="timing-tag">Generated (Full)</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/full_vs_partial/video-1-full.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <span class="timing-tag">Partial Input</span>
+              <img src="our_results/full_vs_partial/video-1-partial.png" alt="Reference frame for partial control">
+            </div>
+            <div class="partial-media">
+              <span class="timing-tag">Generated (Partial)</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results/full_vs_partial/video-1-partial.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section id="limitations">
+        <div class="section-heading">
+          <div class="section-heading-top">
+            <span>Limitations of DreamLoop</span>
+            <a class="section-pill" href="./limitation.html">More Results</a>
+          </div>
+          <h2>Limitations of DreamLoop</h2>
+          <p>
+            Despite the capabilities of DreamLoop and its ability to generate cinemagraphs from a single photograph with intuitive and easy-to-use, but precise motion control, it still has some limitations.
+          </p>
+        </div>
+
+        <div class="showcase-grid">
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/limitation/limitation-7.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/limitation/limitation-7.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Limitation: The hand of the girl gets deformed in the video. This can happen because of limitations of the base model involving human motion.'
+            >
+              <span class="instruction-text">Limitation: The hand of the girl gets deformed in the video. This can happen because of limitations of the base model involving human motion.</span>
+            </div>
+          </article>
+        
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/limitation/limitation-5.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/limitation/limitation-5.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Explanation: Only part of the petal moves for which motion path was defined. But the results is not as expected intuitively.'
+            >
+              <span class="instruction-text">Limitation: Only part of the petal moves for which motion path was defined. But the results is not as expected intuitively.</span>
+            </div>
+          </article>
+
+          <article class="card">
+            <div class="media-pair">
+              <div class="media-box">
+                <img src="our_results/limitation/limitation-3.png" alt="Fountain before motion">
+              </div>
+              <div class="media-box">
+                <video autoplay loop muted playsinline>
+                  <source src="our_results/limitation/limitation-3.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+            <div
+              class="instruction"
+              data-full-text='Explanation: The buttons on the blazer do not move in the video with the hand. This is likely the limitation of the base model involving object motion.'
+            >
+              <span class="instruction-text">Limitation: The buttons on the blazer do not move in the video with the hand. This is likely the limitation of the base model involving object motion.</span>
+            </div>
+          </article>
+          
+        </div>
+      </section>
+
+      <section id="teaser">
+        <div class="section-heading">
+          <div class="section-heading-top">
+            <span>Teaser</span>
+            <!-- <a class="section-pill" href="./limitations.html">More Results</a> -->
+          </div>
+          <h2>Teaser Figure</h2>
+          <p>
+            Video results for the teaser figure in the main paper.
+          </p>
+        </div>
+        <article class="partial-control-card">
+          <div
+            class="instruction timing-instruction"
+            data-full-text="Prompt (top): A girl holding a rabbit in her lap. Both are rabbit and the girl are completely stationary. Only the earrnig of the girl is oscillating very slowly. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."
+          >
+            <span class="instruction-text"
+              >Ptompt (top): A girl holding a rabbit in her lap. Both are rabbit and the girl are completely stationary. Only the earrnig of the girl is oscillating very slowly. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span
+            >
+          </div>
+          <div
+            class="instruction timing-instruction"
+            data-full-text="Prompt (bottom): A girl petting the rabbit which is sitting on her lap. Both are rabbit and the girl are completely stationary. The girl only moves her arm to pet the rabbit. The rabbit is nibbling. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end."
+          >
+            <span class="instruction-text"
+              >Prompt (bottom): A girl petting the rabbit which is sitting on her lap. Both are rabbit and the girl are completely stationary. The girl only moves her arm to pet the rabbit. The rabbit is nibbling. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span
+            >
+          </div>
+          <div class="partial-grid">
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Reference Input (Scene 1)</span> -->
+              <img
+                src="our_results/teaser/teaser-p1_page-0001.jpg"
+                alt="Reference frame for timing control scene 1"
+              >
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 1 - Baseline</span> -->
+              <img
+                src="our_results/teaser/teaser1.png"
+                alt="Reference frame for timing control scene 1"
+              >
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 2 - Baseline</span> -->
+              <video autoplay loop muted playsinline>
+                <source src="our_results/teaser/teaser-1.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 3 - Baseline</span> -->
+              <img
+                src="our_results/teaser/teaser-p2_page-0001.jpg"
+                alt="Reference frame for timing control scene 1"
+              >
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 1 - Timing Control</span> -->
+              <img
+                src="our_results/teaser/teaser2.png"
+                alt="Reference frame for timing control scene 1"
+              >
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 2 - Timing Control</span> -->
+              <video autoplay loop muted playsinline>
+                <source src="our_results/teaser/teaser-2.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <!-- <span class="timing-tag">Scene 3 - Timing Control</span> -->
+              <video autoplay loop muted playsinline>
+                <source src="our_results/teaser/teaser-3.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </article>
+        </section>
+<!-- 
+      <section id="methodology">
+        <div class="section-heading">
+          <span>Methodology</span>
+          <h2>Unified Multimodal Token Space</h2>
+          <p>
+            EditVerse is grounded in two core innovations: unified representations for
+            multimodal in-context learning and an interleaved architecture powered by
+            four-dimensional Rotary Position Embeddings (RoPE).
+          </p>
+        </div>
+
+        <div class="method-grid">
+          <article class="method-card">
+            <h3>Unified Sequencing</h3>
+            <p>
+              Text, image, and video tokens are merged into a single sequence, enabling
+              full self-attention over all modalities and seamless knowledge transfer.
+            </p>
+          </article>
+          <article class="method-card">
+            <h3>Flexible Interleaving</h3>
+            <p>
+              Inspired by MLLMs, EditVerse accepts arbitrary resolutions and durations,
+              preserving order through spatial-temporal positional encodings.
+            </p>
+          </article>
+          <article class="method-card">
+            <h3>4D Rotary Position Embedding</h3>
+            <p>
+              Novel RoPE design encodes sequential, temporal, height, and width dimensions
+              to distinguish complex cross-modal relationships.
+            </p>
+          </article>
+        </div>
+      </section> -->
+
+      <section id="vbench">
+        <div class="section-heading">
+          <span>Quantitative Comparison - General Domain Cinemagraphs</span>
+          <h2>Performance on VBench</h2>
+          <p>
+            DreamLoop outperforms baselines on custom domain cinemagraphs on controllable generation for general domain. across all VBench metrics.
+          </p>
+        </div>
+
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Aesthetic Quality ↑</th>
+                <th>Imaging Quality ↑</th>
+                <th>Temporal Flickering ↑</th>
+                <th>Motion Smoothness ↑</th>
+                <th>Background Consistency ↑</th>
+                <th>Subject Consistency ↑</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>CogVideoX*</td>
+                <td>0.5353</td>
+                <td>0.6419</td>
+                <td>0.9888</td>
+                <td>0.9904</td>
+                <td>0.9741</td>
+                <td>0.9787</td>
+              </tr>
+              <tr>
+                <td>Wan2.2-5B* (pretrained)</td>
+                <td>0.5442</td>
+                <td>0.6018</td>
+                <td>0.9881</td>
+                <td>0.9922</td>
+                <td>0.9598</td>
+                <td>0.9605</td>
+              </tr>
+              <tr class="table-dash-top table-dash-bottom">
+                <td>DragAnything*</td>
+                <td>0.4986</td>
+                <td>0.5535</td>
+                <td>0.9674</td>
+                <td>0.9789</td>
+                <td>0.9613</td>
+                <td>0.9474</td>
+              </tr>
+              <tr>
+                <td>Ours (Wan2.2-5B) [only first-last]</td>
+                <td>0.5897</td>
+                <td>0.6756</td>
+                <td>0.9950</td>
+                <td>0.9959</td>
+                <td>0.9746</td>
+                <td>0.9941</td>
+              </tr>
+              <tr>
+                <td>Ours (internal) [only first-last]</td>
+                <td>0.5872</td>
+                <td>0.6615</td>
+                <td>0.9899</td>
+                <td>0.9929</td>
+                <td>0.9685</td>
+                <td>0.9566</td>
+              </tr>
+              <tr>
+                <td>Ours (Wan2.2-5B)</td>
+                <td><strong>0.5998</strong></td>
+                <td>0.6762</td>
+                <td>0.9955</td>
+                <td><strong>0.9964</strong></td>
+                <td>0.9800</td>
+                <td><strong>0.9868</strong></td>
+              </tr>
+              <tr>
+                <td>Ours (internal)</td>
+                <td>0.5997</td>
+                <td><strong>0.6771</strong></td>
+                <td><strong>0.9965</strong></td>
+                <td>0.9959</td>
+                <td><strong>0.9849</strong></td>
+                <td>0.9858</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="study">
+        <div class="section-heading">
+          <span>User Study - General Domain Cinemagraphs</span>
+          <h2>Human Preference Study</h2>
+          <p>
+            User Study with Amazon Mechanical Turk involving 50 participants confirms 
+            DreamLoop achieves higher user preference for controllable cinemagraph 
+            generation compared with contemporary open-source methods. Each comparison is done by 3 participants.
+          </p>
+        </div>
+
+        <figure class="study-figure">
+          <img
+            src="our_results/user_study/user_study_summary.png"
+            alt="Summary of DreamLoop human preference study results."
+          >
+          <figcaption>
+            Human preference evaluation comparing DreamLoop against contemporary controllable video generation
+            baselines across 2 different bsse models (Wan2.2-5B and internal).
+          </figcaption>
+        </figure>
+      </section>
+
+    <footer>
+      DreamLoop · Controllable Cinemagraph Generation from a Single Photograph · CVPR 2026
+    </footer>
+  </body>
+</html>
+
+

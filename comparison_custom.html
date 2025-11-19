@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DreamLoop | Controllable Cinemagraph Generation from a Single Photograph</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #05060d;
+        --bg-alt: #101223;
+        --surface: #161831;
+        --surface-alt: #1e203d;
+        --text: #f8f9fb;
+        --muted: #a0a5c1;
+        --accent: #8f7afe;
+        --accent-soft: rgba(143, 122, 254, 0.15);
+        --border: rgba(255, 255, 255, 0.08);
+        --max-width: 1080px;
+        --radius-lg: 32px;
+        --radius-md: 20px;
+        --radius-sm: 12px;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background-color: var(--bg);
+        line-height: 1.6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top left, #1b1d3a, #05060d);
+        color: var(--text);
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(16px);
+        background: rgba(5, 6, 13, 0.85);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        /* justify-content: flex-start;
+        gap: 48px; */
+      }
+
+      .brand {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        box-shadow: 0 10px 30px rgba(143, 122, 254, 0.4);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav a {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--muted);
+        transition: color 0.2s ease;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        color: var(--text);
+      }
+
+      .hero {
+        padding: 120px 24px 80px;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: 48px;
+        align-items: start;
+      }
+
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .hero-eyebrow {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #b3b8d6;
+      }
+
+      .hero-title {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(2.4rem, 5vw, 3.7rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 18px 0 20px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+        color: var(--muted);
+        margin-bottom: 28px;
+        max-width: 480px;
+      }
+
+      .btn {
+        padding: 12px 22px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, background 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #0c0d17;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .btn:hover,
+      .btn:focus-visible {
+        transform: translateY(-2px);
+      }
+
+      .hero-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .hero-capsule-panel {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        padding: 36px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+      }
+
+      .hero-capsule-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 25% 20%,
+          rgba(143, 122, 254, 0.35),
+          transparent 65%
+        );
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .hero-capsule-panel > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .capsule-title {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #c4c6f5;
+      }
+
+      .capsule-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+      }
+
+      .capsule-grid .btn {
+        flex: 1 1 45%;
+        min-width: 160px;
+        text-align: center;
+        justify-content: center;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      main {
+        padding: 0 24px 120px;
+      }
+
+      section {
+        max-width: var(--max-width);
+        margin: 0 auto 90px;
+      }
+
+      .section-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .section-heading-top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .section-heading span {
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 0.75rem;
+        color: #8187a8;
+      }
+
+      .section-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 18px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #07111b;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 12px 32px rgba(143, 122, 254, 0.35);
+        text-transform: uppercase;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 640px;
+      }
+
+      .showcase-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      .card .label {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #858ac0;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .media-pair {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .media-box {
+        background: var(--surface-alt);
+        border-radius: var(--radius-sm);
+        min-height: 0;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        display: grid;
+        place-items: center;
+        color: #6f7498;
+        font-size: 0.78rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .media-box span {
+        z-index: 1;
+      }
+
+      .media-box img,
+      .media-box video {
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        object-fit: cover;
+        border-radius: inherit;
+        background: #000;
+      }
+
+      .instruction {
+        position: relative;
+        border-radius: var(--radius-sm);
+        background: rgba(143, 122, 254, 0.12);
+        border: 1px solid rgba(143, 122, 254, 0.25);
+        color: #c9c5ff;
+        font-size: 0.92rem;
+        padding: 16px 18px;
+        font-weight: 600;
+        cursor: default;
+        overflow: visible;
+      }
+
+      .instruction-text {
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .instruction::after {
+        content: attr(data-full-text);
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 12px);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(6px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        background: rgba(24, 26, 52, 0.96);
+        color: #f6f5ff;
+        padding: 16px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        box-shadow: 0 18px 40px rgba(8, 10, 30, 0.45);
+        z-index: 5;
+        line-height: 1.6;
+        display: block;
+        white-space: normal;
+        max-width: 360px;
+      }
+
+      .instruction:hover::after {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .video-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .video-card h4 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .video-placeholder {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        background: rgba(20, 24, 48, 0.5);
+        overflow: hidden;
+      }
+
+      .video-placeholder video,
+      .video-placeholder img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .comparison-tag {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        /* text-transform: uppercase; */
+        color: #f6f6ff;
+        pointer-events: none;
+      }
+
+      .table-wrapper {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+
+      thead {
+        background: rgba(143, 122, 254, 0.12);
+      }
+
+      th,
+      td {
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      mark {
+        background: rgba(143, 122, 254, 0.2);
+        color: var(--text);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .method-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .method-card {
+        padding: 24px;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+
+      .footer-cta {
+        background: linear-gradient(135deg, rgba(143, 122, 254, 0.25), rgba(79, 195, 255, 0.25));
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        border-radius: var(--radius-lg);
+        padding: 48px;
+        text-align: center;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px 60px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 720px) {
+        .hero {
+          padding-top: 90px;
+        }
+
+        .hero-capsule-panel {
+          padding: 28px;
+        }
+
+        .capsule-grid .btn {
+          flex-basis: 100%;
+        }
+
+        nav ul {
+          display: none;
+        }
+
+        .media-pair {
+          gap: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+        <div class="nav">
+          <a class="brand" href="#top">DreamLoop</a>
+          <nav>
+            <ul>
+              <li><a href="">Paper ID: 8738</a></li>
+              <li><a href="index.html">HomePage</a></li>
+              <!-- <li><a href="#overview">Overview</a></li> -->
+              <!-- <li><a href="#overview">Overview</a></li>
+              <li><a href="#cinemagraphs">Cinemagraphs</a></li>
+              <li><a href="#video-generation">Video Generation</a></li>
+              <li><a href="#image">Image Editing</a></li>
+              <li><a href="#methodology">Methodology</a></li>
+              <li><a href="#benchmark">Benchmark</a></li>
+              <li><a href="#study">User Study</a></li> -->
+            </ul>
+          </nav>
+        </div>
+      </header>
+
+    <main id="top">
+
+      <section id="video-generation">
+        <div class="section-heading">
+            <div style="height:32px;"></div>
+            <div class="section-heading-top">
+                <span>Controllable General Domain Cinemagraphs - Comparisons</span>
+                <a class="section-pill" href="index.html#baseline-custom">HomePage</a>
+            </div>
+          <h2>Comparison of Our method with Baselines for Controllable General Domain Cinemagraphs</h2>
+          <p>
+            We compare our method (both with internal model and Wan2.2-5B) with baselines which include: I) Image-to-Video Models - CogVideoX and Wan2.2-5B (pretrained), II) Motion Controllable Image-to-Video Models - DragAnything, III) Our method with only first-last-frame conditioning.
+            For I) and II), we use post-processing to make the videos looping.
+          </p>
+        </div>
+        <article class="video-card">
+            <div
+            class="instruction"
+            data-full-text='Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+            <div class="video-grid">
+              <div class="video-placeholder">
+                <span class="comparison-tag">Input</span>
+                <img src="our_results/inputs_draw/20251108_193019.png" alt="20251108_193019 reference frame">
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">CogVideoX</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-cogvideox-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">DragAnything</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-draganything/20251108_192101.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-base/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">Ours (internal) [first-last]</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-v1p8-nocontrol/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-wan2p2-control/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+              <div class="video-placeholder">
+                <span class="comparison-tag">Ours (internal)</span>
+                <video autoplay loop muted playsinline>
+                <source src="our_results/ours-v1p8-control/20251108_193019.mp4" type="video/mp4">
+              </video>
+              </div>
+            </div>
+          </article>
+
+          <div style="height: 34px;"></div>
+
+        <article class="video-card">
+            <div
+            class="instruction"
+            data-full-text='Prompt: A dog sits in the same place, rotating only its paw. Static scene, slow motion shot. Static camera Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A dog sits in the same place, rotating only its paw. Static scene, slow motion shot. Static camera Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20250818_204126.png" alt="20250818_204126 reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-cogvideox-nocontrol/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-draganything/20251109_161000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-base/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-nocontrol/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-nocontrol/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-control/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-control/20250818_204126.mp4" type="video/mp4">
+            </video>
+            </div>
+          </div>
+        </article>
+
+        <div style="height: 34px;"></div>
+
+        <article class="video-card">
+            <div
+            class="instruction"
+            data-full-text='Prompt: A wide, static shot captures a single, delicate dandelion seed head. The white sphere of pappus is perfectly round and fragile. The dandelion stands on a thin green stem, which remains completely still. The background is a soft, blurry mix of green foliage and what appears to be a weathered brick surface, all of which is unmoving. The only element with any movement is the dandelion seed head itself. It sways gently and continuously, as if caught in an almost imperceptible breeze. The delicate white filaments of the pappus oscillate back and forth in a smooth, subtle, and mesmerizing loop, creating a peaceful contrast between the static world and this single, moving point of light. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A wide, static shot captures a single, delicate dandelion seed head. The white sphere of pappus is perfectly round and fragile. The dandelion stands on a thin green stem, which remains completely still. The background is a soft, blurry mix of green foliage and what appears to be a weathered brick surface, all of which is unmoving. The only element with any movement is the dandelion seed head itself. It sways gently and continuously, as if caught in an almost imperceptible breeze. The delicate white filaments of the pappus oscillate back and forth in a smooth, subtle, and mesmerizing loop, creating a peaceful contrast between the static world and this single, moving point of light. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20250822_214447.png" alt="20250822_214447 reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-cogvideox-nocontrol/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-draganything/20250819_170131.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-base/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-nocontrol/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-nocontrol/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-control/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-control/20250822_214447.mp4" type="video/mp4">
+            </video>
+            </div>
+          </div>
+        </article>
+
+        <div style="height: 34px;"></div>
+
+        <article class="video-card">
+            <div
+            class="instruction"
+            data-full-text='Prompt: Two people in professional suits standing in the same place and shaking hands. The camera remains static in a place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: Two people in professional suits standing in the same place and shaking hands. The camera remains static in a place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20251108_192101.png" alt="20251108_192101 reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-cogvideox-nocontrol/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-draganything/20251108_191256.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-base/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-nocontrol/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-nocontrol/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-control/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-control/20251108_192101.mp4" type="video/mp4">
+            </video>
+            </div>
+          </div>
+        </article>
+        <article class="video-card">
+          <div
+            class="instruction"
+            data-full-text='Prompt: A scene of two empty swings oscillating due to the winds blowing. The background is covered in snow, and it is a morning scene. The shot is with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A scene of two empty swings oscillating due to the winds blowing. The background is covered in snow, and it is a morning scene. The shot is with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20251109_142310.png" alt="20251108_221239 reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-cogvideox-nocontrol/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-draganything/20251109_141004.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-base/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-nocontrol/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-nocontrol/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-control/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-control/20251109_142310.mp4" type="video/mp4">
+            </video>
+            </div>
+          </div>
+        </article>
+
+        <div style="height: 34px;"></div>
+
+        <article class="video-card">
+          <div
+            class="instruction"
+            data-full-text='Prompt: A girl is casually sitting on the couch in a still posture. She is slowly lifting one of her feet up and down and also rotating her hand, which has a firecracker. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
+          >
+            <span class="instruction-text">Prompt: A girl is casually sitting on the couch in a still posture. She is slowly lifting one of her feet up and down and also rotating her hand, which has a firecracker. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          </div>
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag">Input</span>
+              <img src="our_results/inputs_draw/20251109_103915.png" alt="20251109_103915 reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">CogVideoX</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-cogvideox-nocontrol/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">DragAnything</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-draganything/20251109_102342.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Wan2.2-5B (Pretrained)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-base/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-nocontrol/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal) [first-last]</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-nocontrol/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (Wan2.2-5B)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-wan2p2-control/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag">Ours (internal)</span>
+              <video autoplay loop muted playsinline>
+              <source src="our_results/ours-v1p8-control/20251109_103915.mp4" type="video/mp4">
+            </video>
+            </div>
+          </div>
+        </article>
+      </section>
+
+    <footer>
+      DreamLoop · Controllable Cinemagraph Generation from a Single Photograph · CVPR 2026
+    </footer>
+  </body>
+</html>
+
+
