@@ -49,6 +49,10 @@
         color: var(--text);
       }
 
+      body.lightbox-open {
+        overflow: hidden;
+      }
+
       a {
         color: inherit;
         text-decoration: none;
@@ -141,10 +145,102 @@
 
       .hero-title {
         font-family: "Space Grotesk", "Inter", sans-serif;
-        font-size: clamp(2.4rem, 5vw, 3.7rem);
+        font-size: clamp(2.1rem, 4vw, 3.3rem);
         font-weight: 700;
-        line-height: 1.1;
-        margin: 18px 0 20px;
+        line-height: 1.2;
+        margin: 18px 0 12px;
+        max-width: var(--max-width);
+      }
+
+      .glow-text {
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.5)) drop-shadow(0 0 24px rgba(6, 182, 212, 0.4));
+        animation: titleGlow 3s ease-in-out infinite alternate;
+      }
+
+      @keyframes titleGlow {
+        from {
+          filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.5)) drop-shadow(0 0 24px rgba(6, 182, 212, 0.4));
+        }
+        to {
+          filter: drop-shadow(0 0 18px rgba(139, 92, 246, 0.7)) drop-shadow(0 0 32px rgba(6, 182, 212, 0.5));
+        }
+      }
+
+      .authors {
+        font-size: 1.2rem;
+        color: var(--text);
+        margin: 2px 0 2px;
+        line-height: 1.8;
+      }
+
+      .author-name {
+        font-weight: 500;
+      }
+
+      .affiliation {
+        font-size: 1.1rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0px 0 2px;
+      }
+
+      .hero-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 2px;
+      }
+
+      .tech-report-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        padding: 14px 28px;
+        background: transparent;
+        border: 2px solid;
+        border-image: linear-gradient(90deg, #8b5cf6, #06b6d4) 1;
+        border-radius: 0;
+        color: #ffffff;
+        font-size: 1rem;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .tech-report-btn::before {
+        content: '';
+        position: absolute;
+        inset: -2px;
+        padding: 2px;
+        background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+        border-radius: 50px;
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+      }
+
+      .tech-report-btn {
+        border: none;
+        border-radius: 50px;
+      }
+
+      .tech-report-btn:hover {
+        box-shadow: 0 0 24px rgba(139, 92, 246, 0.5), 0 0 48px rgba(6, 182, 212, 0.3);
+        transform: translateY(-2px);
+      }
+
+      .tech-report-btn svg {
+        width: 20px;
+        height: 20px;
       }
 
       .hero-subtitle {
@@ -316,13 +412,13 @@
       .section-heading h2 {
         margin: 0;
         font-family: "Space Grotesk", "Inter", sans-serif;
-        font-size: clamp(1.9rem, 3.6vw, 2.6rem);
+        font-size: clamp(1.4rem, 2.8vw, 1.8rem);
       }
 
       .section-heading p {
         margin: 0;
         color: var(--muted);
-        max-width: 640px;
+        max-width: 100%;
       }
 
       .showcase-grid {
@@ -491,6 +587,28 @@
         gap: 18px;
       }
 
+      #baseline-nature .video-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      @media (max-width: 1100px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 500px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
       .video-placeholder {
         position: relative;
         border-radius: var(--radius-sm);
@@ -506,10 +624,107 @@
         display: block;
       }
 
+      .video-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 2;
+      }
+
+      .video-placeholder:hover .video-actions,
+      .media-box:hover .video-actions,
+      .timing-media:hover .video-actions,
+      .partial-media:hover .video-actions {
+        opacity: 1;
+      }
+
+      .video-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        background: rgba(10, 12, 28, 0.72);
+        color: #f4f4ff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .video-action-btn svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      .video-action-btn:hover,
+      .video-action-btn:focus-visible {
+        background: rgba(20, 24, 48, 0.85);
+        border-color: rgba(255, 255, 255, 0.35);
+      }
+
+      .media-lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 7, 18, 0.82);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        z-index: 999;
+      }
+
+      .media-lightbox.is-open {
+        display: flex;
+      }
+
+      .media-lightbox__content {
+        position: relative;
+        width: min(960px, 90vw);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      }
+
+      .media-lightbox__video {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #050712;
+      }
+
+      .media-lightbox__close {
+        display: none;
+      }
+
       .comparison-tag {
         position: absolute;
         bottom: 5px;
         right: 5px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        /* text-transform: uppercase; */
+        color: #f6f6ff;
+        pointer-events: none;
+      }
+
+      .comparison-tag-top {
+        position: absolute;
+        top: 5px;
+        left: 5px;
         padding: 4px 8px;
         border-radius: 10px;
         background: rgba(12, 14, 28, 0.78);
@@ -763,76 +978,36 @@
     </style>
   </head>
   <body>
-    <header>
-      <div class="nav">
-        <a class="brand" href="#top">DreamLoop</a>
-        <nav>
-          <ul>
-            <li><a href="">Paper ID: 8738</a></li>
-            <li><a href="#">HomePage</a></li>
-            <!-- <li><a href="#overview">Overview</a></li> -->
-            <!-- <li><a href="#overview">Overview</a></li>
-            <li><a href="#cinemagraphs">Cinemagraphs</a></li>
-            <li><a href="#video-generation">Video Generation</a></li>
-            <li><a href="#image">Image Editing</a></li>
-            <li><a href="#methodology">Methodology</a></li>
-            <li><a href="#benchmark">Benchmark</a></li>
-            <li><a href="#study">User Study</a></li> -->
-          </ul>
-        </nav>
-      </div>
-    </header>
-
     <main id="top">
       <section id="overview" class="hero">
-        <div class="hero-content">
-          <!-- <div class="hero-eyebrow">Adobe Research & Partners</div> -->
+        <div class="hero-content" style="text-align: center; max-width: var(--max-width); margin: 0 auto;">
           <h1 class="hero-title">
-            DreamLoop:<span style="font-weight: 50;"> Controllable Cinemagraph Generation from a Single Photograph</span>
+            <span class="glow-text">DreamLoop:</span> Controllable Cinemagraph Generation from a Single Photograph
           </h1>
-          <p class="hero-subtitle">
-            DreamLoop is a novel framework for generating <u><i>any domain</i></u> cinemagraphs from a single photograph, with <u><i>precise motion control</i></u>.
-          </p>
-        </div>
-
-        <div class="hero-capsule-panel">
-          <p class="capsule-title">Quick Links</p>
-          <div class="capsule-grid-wrapper">
-            <div class="capsule-grid">
-              <!-- <a class="btn btn-primary" href="#our_results"> -->
-              <a class="btn btn-secondary" href="#our_results">
-                <span class="btn-heading">Our Results (Controllable Cinemagraphs)</span>
-                <span class="btn-subtitle">DreamLoop controllable cinemagraph results showcase</span>
-              </a>
-              <a class="btn btn-secondary" href="#baseline-custom">
-                <span class="btn-heading">Comparisons - General Domain Cinemagraphs</span>
-                <span class="btn-subtitle">Baselines vs DreamLoop for general domain cinemagraphs</span>
-              </a>
-              <a class="btn btn-secondary" href="#timing">
-                <span class="btn-heading">Timing Control</span>
-                <span class="btn-subtitle">Fine-grained motion control with timing</span>
-              </a>
-              <a class="btn btn-secondary" href="#full-partial-control">
-                <span class="btn-heading">Partial vs Full Motion Control</span>
-                <span class="btn-subtitle">Effect of just providing initial motion hint</span>
-              </a>
-              <a class="btn btn-secondary" href="#limitations">
-                <span class="btn-heading">Limitations</span>
-                <span class="btn-subtitle">Failing scenarios for DreamLoop</span>
-              </a>
-              <a class="btn btn-secondary" href="#teaser">
-                <span class="btn-heading">Teaser Figure</span>
-                <span class="btn-subtitle">Paper teaser figrue assets</span>
-              </a>
-              <a class="btn btn-secondary" href="#vbench">
-                <span class="btn-heading">VBench Evaluation</span>
-                <span class="btn-subtitle">Quantitative results on general domain cinemagraphs</span>
-              </a>
-              <a class="btn btn-secondary" href="#study">
-                <span class="btn-heading">User Study</span>
-                <span class="btn-subtitle">Preference study on controllable general domain cinemagraphs</span>
-              </a>
-            </div>
+          <div class="authors">
+            <span class="author-name">Aniruddha Mahapatra</span>, 
+            <span class="author-name">Long Mai</span>, 
+            <span class="author-name">Cusuh Ham</span>, 
+            <span class="author-name">Feng Liu</span>
+          </div>
+          <div class="affiliation">ADOBE RESEARCH</div>
+          <div class="hero-buttons">
+            <a class="tech-report-btn" href="#">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              Tech Report
+            </a>
+            <a class="tech-report-btn" href="https://drive.google.com/file/d/18zywuKJnzyHVVtrijiXCOS-yBp6gweKW/view?usp=sharing" target="_blank">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              Demo Video
+            </a>
           </div>
         </div>
       </section>
@@ -841,7 +1016,7 @@
         <div class="section-heading">
           <div class="section-heading-top">
             <span>Controllable General Domain Cinemagraphs - Our Results</span>
-            <a class="section-pill" href="./our_results.html">More Results</a>
+            <a class="section-pill" href="./html_pages/our_results.html">More Results</a>
           </div>
           <h2>Cinemagraph Creation from Single Photograph with Motion Control</h2>
           <p>
@@ -972,7 +1147,7 @@
         <div class="section-heading">
             <div class="section-heading-top">
                 <span>Controllable General Domain Cinemagraphs - Comparisons</span>
-                <a class="section-pill" href="./comparison_custom.html">More Results</a>
+                <a class="section-pill" href="./html_pages/comparison_custom.html">More Results</a>
             </div>
           <h2>Comparison of Our method with Baselines for Controllable General Domain Cinemagraphs</h2>
           <p>
@@ -981,7 +1156,7 @@
           </p>
         </div>
 
-        <div class="video-card">
+        <article class="video-card">
           <div
             class="instruction"
             data-full-text='Prompt: A makeup artist is applying makeup with a brush on the face of a female celebrity. The scene is static, the makeup artist and celebrity do not move, they remain still in their place. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'
@@ -991,7 +1166,7 @@
           <div class="video-grid">
             <div class="video-placeholder">
               <span class="comparison-tag">Input</span>
-              <img src="our_results/inputs_draw/20251108_193019.png" alt="Input reference frame">
+                <img src="our_results/inputs_draw/20251108_193019.png" alt="20251108_193019 reference frame">
             </div>
             <div class="video-placeholder">
               <span class="comparison-tag">CogVideoX</span>
@@ -1012,7 +1187,7 @@
               </video>
             </div>
             <div class="video-placeholder">
-              <span class="comparison-tag"> Ours (Wan2.2-5B) [first-last]</span>
+                <span class="comparison-tag">Ours (Wan2.2-5B) [first-last]</span>
               <video autoplay loop muted playsinline>
                 <source src="our_results/ours-wan2p2-nocontrol/20251108_193019.mp4" type="video/mp4">
               </video>
@@ -1036,14 +1211,14 @@
               </video>
             </div>
           </div>
-        </div>
+          </article>
       </section>
 
       <section id="timing">
         <div class="section-heading">
             <div class="section-heading-top">
               <span>Timing Control for Cinemagraphs</span>
-              <a class="section-pill" href="./timing_control.html">More Results</a>
+              <a class="section-pill" href="./html_pages/timing_control.html">More Results</a>
             </div>
           <h2>Importance of Timing Control over Object Motion</h2>
           <p>
@@ -1083,7 +1258,7 @@
         <div class="section-heading">
             <div class="section-heading-top">
               <span>Full vs Partial Control over Object Motion</span>
-              <a class="section-pill" href="./full_partial.html">More Results</a>
+              <a class="section-pill" href="./html_pages/full_partial.html">More Results</a>
             </div>
           <h2>Full vs Partial Control over Object Motion</h2>
           <p>
@@ -1092,28 +1267,28 @@
         </div>
 
         <article class="partial-control-card">
-          <div class="instruction timing-instruction" data-full-text='Prompt: A girl is standing beside the window. She tries to move the curtain with her hand slowly, while keeping the same pose. Everything else remains stationary. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'>
-            <span class="instruction-text">Prompt: A girl is standing beside the window. She tries to move the curtain with her hand slowly, while keeping the same pose. Everything else remains stationary. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
+          <div class="instruction timing-instruction" data-full-text='Prompt: A scene of two empty swings oscillating due to the winds blowing. The background is covered in snow, and it is a morning scene. The shot is with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.'>
+            <span class="instruction-text">Prompt: A scene of two empty swings oscillating due to the winds blowing. The background is covered in snow, and it is a morning scene. The shot is with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span>
           </div>
           <div class="partial-grid">
             <div class="partial-media">
               <span class="timing-tag">Full Input</span>
-              <img src="our_results/full_vs_partial/video-1-full.png" alt="Reference frame for partial control">
+              <img src="our_results/full_vs_partial/video-8-full.png" alt="Reference frame for partial control">
             </div>
             <div class="partial-media">
               <span class="timing-tag">Generated (Full)</span>
               <video autoplay loop muted playsinline>
-                <source src="our_results/full_vs_partial/video-1-full.mp4" type="video/mp4">
+                <source src="our_results/full_vs_partial/video-8-full.mp4" type="video/mp4">
               </video>
             </div>
             <div class="partial-media">
               <span class="timing-tag">Partial Input</span>
-              <img src="our_results/full_vs_partial/video-1-partial.png" alt="Reference frame for partial control">
+              <img src="our_results/full_vs_partial/video-8-partial.png" alt="Reference frame for partial control">
             </div>
             <div class="partial-media">
               <span class="timing-tag">Generated (Partial)</span>
               <video autoplay loop muted playsinline>
-                <source src="our_results/full_vs_partial/video-1-partial.mp4" type="video/mp4">
+                <source src="our_results/full_vs_partial/video-8-partial.mp4" type="video/mp4">
               </video>
             </div>
           </div>
@@ -1124,7 +1299,6 @@
         <div class="section-heading">
           <div class="section-heading-top">
             <span>Limitations of DreamLoop</span>
-            <a class="section-pill" href="./limitation.html">More Results</a>
           </div>
           <h2>Limitations of DreamLoop</h2>
           <p>
@@ -1220,8 +1394,8 @@
             <span class="instruction-text"
               >Prompt (bottom): A girl petting the rabbit which is sitting on her lap. Both are rabbit and the girl are completely stationary. The girl only moves her arm to pet the rabbit. The rabbit is nibbling. The shot is taken with a static camera. Camera remains stationary. Static Camera. Camera locked down at the same place. The video loops back to the beginning of the video after it reaches the end.</span
             >
-          </div>
-          <div class="partial-grid">
+            </div>
+            <div class="partial-grid">
             <div class="partial-media">
               <!-- <span class="timing-tag">Reference Input (Scene 1)</span> -->
               <img
@@ -1238,9 +1412,9 @@
             </div>
             <div class="partial-media">
               <!-- <span class="timing-tag">Scene 2 - Baseline</span> -->
-              <video autoplay loop muted playsinline>
+                <video autoplay loop muted playsinline>
                 <source src="our_results/teaser/teaser-1.mp4" type="video/mp4">
-              </video>
+                </video>
             </div>
             <div class="partial-media">
               <!-- <span class="timing-tag">Scene 3 - Baseline</span> -->
@@ -1258,55 +1432,19 @@
             </div>
             <div class="partial-media">
               <!-- <span class="timing-tag">Scene 2 - Timing Control</span> -->
-              <video autoplay loop muted playsinline>
+                <video autoplay loop muted playsinline>
                 <source src="our_results/teaser/teaser-2.mp4" type="video/mp4">
-              </video>
+                </video>
             </div>
             <div class="partial-media">
               <!-- <span class="timing-tag">Scene 3 - Timing Control</span> -->
-              <video autoplay loop muted playsinline>
+                <video autoplay loop muted playsinline>
                 <source src="our_results/teaser/teaser-3.mp4" type="video/mp4">
-              </video>
+                </video>
             </div>
-          </div>
+            </div>
         </article>
         </section>
-<!-- 
-      <section id="methodology">
-        <div class="section-heading">
-          <span>Methodology</span>
-          <h2>Unified Multimodal Token Space</h2>
-          <p>
-            EditVerse is grounded in two core innovations: unified representations for
-            multimodal in-context learning and an interleaved architecture powered by
-            four-dimensional Rotary Position Embeddings (RoPE).
-          </p>
-        </div>
-
-        <div class="method-grid">
-          <article class="method-card">
-            <h3>Unified Sequencing</h3>
-            <p>
-              Text, image, and video tokens are merged into a single sequence, enabling
-              full self-attention over all modalities and seamless knowledge transfer.
-            </p>
-          </article>
-          <article class="method-card">
-            <h3>Flexible Interleaving</h3>
-            <p>
-              Inspired by MLLMs, EditVerse accepts arbitrary resolutions and durations,
-              preserving order through spatial-temporal positional encodings.
-            </p>
-          </article>
-          <article class="method-card">
-            <h3>4D Rotary Position Embedding</h3>
-            <p>
-              Novel RoPE design encodes sequential, temporal, height, and width dimensions
-              to distinguish complex cross-modal relationships.
-            </p>
-          </article>
-        </div>
-      </section> -->
 
       <section id="vbench">
         <div class="section-heading">
@@ -1422,8 +1560,307 @@
         </figure>
       </section>
 
+      <section id="baseline-nature">
+        <div class="section-heading">
+            <div class="section-heading-top">
+                <span>Controllable Natural Domain Cinemagraphs - Comparisons</span>
+                <a class="section-pill" href="./html_pages/comparison_natural.html">More Results</a>
+            </div>
+          <h2>Comparison of Our method with Baselines for Controllable Natural Domain Cinemagraphs</h2>
+          <p>
+            We compare our method with baselines for controllable natural domain cinemagraphs with 1 and 5 hint points.
+          </p>
+
+        </div>
+        <span class="instruction-text" style="display: block; text-align: center;">1 Hint Point</span>
+        </div>
+          <div style="height: 20px;"></div>
+        <div class="video-card">
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Input</span>
+              <img src="our_results_nature/Inputs/1-hint/00980_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Animating Landscape</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Animating-Landscape/1-hint/00980_00000_loop.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Controllable Animation</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Controllable-Animation/1-hint/00980_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">SLR-SFS</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/SLR-SFS/1-hint/00980_00000_input_video.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Ours</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Our-Internal/1-hint/00980_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+
+        </div>
+        <span class="instruction-text" style="display: block; text-align: center;">5 Hint Point</span>
+        </div>
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="our_results_nature/Inputs/5-hint/00980_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Animating-Landscape/5-hint/00980_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Controllable-Animation/5-hint/00980_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="our_results_nature/SLR-SFS/5-hint/00980_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Our-Internal/5-hint/00980_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+      </section>
+
+      <section id="nature-direction">
+        <div class="section-heading">
+            <div class="section-heading-top">
+              <span>Natural Domain Cinemagraphs - Different Directions</span>
+            </div>
+          <h2>Different Directions</h2>
+          <p>
+            We can control the direction of the motion by providing different directions as hint points.
+          </p>
+        </div>
+
+        <article class="partial-control-card">
+          <div class="partial-grid">
+            <div class="partial-media">
+              <span class="comparison-tag-top">Input</span>
+              <img src="our_results_nature/Inputs/5-hint/00989_00000.png" alt="Reference frame for partial control">
+            </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">Generated</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/direction-control/1-1.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">Input</span>
+              <img src="our_results_nature/direction-control/1-2.png" alt="Reference frame for partial control">
+            </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">Generated</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/direction-control/1-2.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+          </article>
+
+        <article class="partial-control-card">
+            <div class="partial-grid">
+              <div class="partial-media">
+                <span class="comparison-tag-top">Input</span>
+                <img src="our_results_nature/direction-control/2-1.png" alt="Reference frame for partial control">
+        </div>
+              <div class="partial-media">
+                <span class="comparison-tag-top">Generated</span>
+                <video autoplay loop muted playsinline>
+                  <source src="our_results_nature/direction-control/2-1.mp4" type="video/mp4">
+                </video>
+              </div>
+              <div class="partial-media">
+                <span class="comparison-tag-top">Input</span>
+                <img src="our_results_nature/direction-control/2-2.png" alt="Reference frame for partial control">
+              </div>
+              <div class="partial-media">
+                <span class="comparison-tag-top">Generated</span>
+                <video autoplay loop muted playsinline>
+                  <source src="our_results_nature/direction-control/2-2.mp4" type="video/mp4">
+                </video>
+              </div>
+            </div>
+          </article>
+      </section>
+
+      <section id="nature-control">
+        <div class="section-heading">
+            <div class="section-heading-top">
+              <span>Natural Domain Cinemagraphs - Different Growth Points</span>
+            </div>
+          <h2>Different number of track points</h2>
+          <p>
+            We find that our method is robust to the number of Track Points, and can generate consistent results with different number of track points.
+          </p>
+          </div>
+
+        <article class="partial-control-card">
+          <div class="partial-grid">
+            <div class="partial-media">
+              <span class="comparison-tag-top">Input</span>
+              <img src="our_results_nature/Inputs/5-hint/00980_00000.png" alt="Reference frame for partial control">
+        </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">10x10</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/track-points/00980_00000_10x10.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">15xx15</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/Our-Internal/5-hint/00980_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="partial-media">
+              <span class="comparison-tag-top">25x25</span>
+              <video autoplay loop muted playsinline>
+                <source src="our_results_nature/track-points/00980_00000_25x25.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </article>
+      </section>
+
+    <div class="media-lightbox" id="mediaLightbox" aria-hidden="true">
+      <div class="media-lightbox__content" role="dialog" aria-modal="true" aria-label="Expanded video preview">
+        <button class="media-lightbox__close" type="button" id="mediaLightboxClose" aria-label="Close preview"></button>
+        <video class="media-lightbox__video" id="mediaLightboxVideo" controls loop muted playsinline></video>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const lightbox = document.getElementById("mediaLightbox");
+        const lightboxVideo = document.getElementById("mediaLightboxVideo");
+        const closeButton = document.getElementById("mediaLightboxClose");
+
+        const getVideoSrc = (video) => {
+          if (!video) return null;
+          const source = video.querySelector("source");
+          if (source && source.getAttribute("src")) {
+            return source.getAttribute("src");
+          }
+          return video.currentSrc || video.getAttribute("src") || null;
+        };
+
+        const closeLightbox = () => {
+          if (!lightbox || !lightboxVideo) return;
+          lightbox.classList.remove("is-open");
+          lightbox.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("lightbox-open");
+          lightboxVideo.pause();
+          lightboxVideo.removeAttribute("src");
+          lightboxVideo.load();
+        };
+
+        const openLightbox = (video, src) => {
+          if (!lightbox || !lightboxVideo || !src) return;
+          lightboxVideo.loop = video.hasAttribute("loop");
+          lightboxVideo.muted = video.muted;
+          lightboxVideo.autoplay = true;
+          lightboxVideo.playsInline = true;
+          lightboxVideo.setAttribute("src", src);
+          lightboxVideo.load();
+          lightboxVideo.play().catch(() => {});
+          lightbox.classList.add("is-open");
+          lightbox.setAttribute("aria-hidden", "false");
+          document.body.classList.add("lightbox-open");
+        };
+
+        const attachActions = () => {
+          const videos = document.querySelectorAll(
+            ".video-placeholder video, .media-box video, .timing-media video, .partial-media video"
+          );
+
+          videos.forEach((video) => {
+            const container = video.closest(
+              ".video-placeholder, .media-box, .timing-media, .partial-media"
+            );
+            if (!container || container.dataset.actionsAttached === "true") {
+              return;
+            }
+
+            const src = getVideoSrc(video);
+            if (!src) return;
+
+            const actions = document.createElement("div");
+            actions.className = "video-actions";
+
+            const openLink = document.createElement("a");
+            openLink.className = "video-action-btn";
+            openLink.href = src;
+            openLink.target = "_blank";
+            openLink.rel = "noopener";
+            openLink.innerHTML =
+              '<svg viewBox="0 0 16 16" fill="none"><path d="M3.75 3.75h8.5v8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12l8.25-8.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Open</span>';
+
+            const enlargeBtn = document.createElement("button");
+            enlargeBtn.type = "button";
+            enlargeBtn.className = "video-action-btn";
+            enlargeBtn.innerHTML =
+              '<svg viewBox="0 0 16 16" fill="none"><path d="M6 3.5H4A.5.5 0 003.5 4v2M10 3.5h2a.5.5 0 01.5.5v2M6 12.5H4a.5.5 0 01-.5-.5v-2M10 12.5h2a.5.5 0 00.5-.5v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Enlarge</span>';
+
+            enlargeBtn.addEventListener("click", () => openLightbox(video, src));
+
+            actions.appendChild(openLink);
+            actions.appendChild(enlargeBtn);
+            container.appendChild(actions);
+            container.dataset.actionsAttached = "true";
+          });
+        };
+
+        if (closeButton) {
+          closeButton.addEventListener("click", closeLightbox);
+        }
+
+        if (lightbox) {
+          lightbox.addEventListener("click", (event) => {
+            if (event.target === lightbox) {
+              closeLightbox();
+            }
+          });
+        }
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeLightbox();
+          }
+        });
+
+        attachActions();
+      })();
+    </script>
+
     <footer>
-      DreamLoop · Controllable Cinemagraph Generation from a Single Photograph · CVPR 2026
+      DreamLoop · Controllable Cinemagraph Generation from a Single Photograph
     </footer>
   </body>
 </html>

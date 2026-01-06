@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DreamLoop | Controllable Cinemagraph Generation from a Single Photograph</title>
+    <link
+      rel="preconnect"
+      href="https://fonts.googleapis.com"
+    />
+    <link
+      rel="preconnect"
+      href="https://fonts.gstatic.com"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #05060d;
+        --bg-alt: #101223;
+        --surface: #161831;
+        --surface-alt: #1e203d;
+        --text: #f8f9fb;
+        --muted: #a0a5c1;
+        --accent: #8f7afe;
+        --accent-soft: rgba(143, 122, 254, 0.15);
+        --border: rgba(255, 255, 255, 0.08);
+        --max-width: 1080px;
+        --radius-lg: 32px;
+        --radius-md: 20px;
+        --radius-sm: 12px;
+        font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", sans-serif;
+        background-color: var(--bg);
+        line-height: 1.6;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top left, #1b1d3a, #05060d);
+        color: var(--text);
+      }
+
+      body.lightbox-open {
+        overflow: hidden;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      header {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        backdrop-filter: blur(16px);
+        background: rgba(5, 6, 13, 0.85);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .nav {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 18px 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        /* justify-content: flex-start;
+        gap: 48px; */
+      }
+
+      .brand {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-weight: 700;
+        font-size: 1.3rem;
+        letter-spacing: 0.06em;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .brand::before {
+        content: "";
+        width: 18px;
+        height: 18px;
+        border-radius: 6px;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        box-shadow: 0 10px 30px rgba(143, 122, 254, 0.4);
+      }
+
+      nav ul {
+        list-style: none;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        margin: 0;
+        padding: 0;
+      }
+
+      nav a {
+        font-weight: 500;
+        font-size: 0.95rem;
+        color: var(--muted);
+        transition: color 0.2s ease;
+      }
+
+      nav a:hover,
+      nav a:focus-visible {
+        color: var(--text);
+      }
+
+      .hero {
+        padding: 120px 24px 80px;
+        max-width: var(--max-width);
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+        gap: 48px;
+        align-items: start;
+      }
+
+      .hero-content {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+      }
+
+      .hero-eyebrow {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #b3b8d6;
+      }
+
+      .hero-title {
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(2.4rem, 5vw, 3.7rem);
+        font-weight: 700;
+        line-height: 1.1;
+        margin: 18px 0 20px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.1rem;
+        color: var(--muted);
+        margin-bottom: 28px;
+        max-width: 480px;
+      }
+
+      .btn {
+        padding: 12px 22px;
+        border-radius: var(--radius-sm);
+        font-weight: 600;
+        font-size: 0.95rem;
+        border: 1px solid transparent;
+        transition: transform 0.2s ease, background 0.2s ease,
+          border-color 0.2s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #0c0d17;
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text);
+        border-color: var(--border);
+      }
+
+      .btn:hover,
+      .btn:focus-visible {
+        transform: translateY(-2px);
+      }
+
+      .hero-btns {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+      }
+
+      .hero-capsule-panel {
+        background: var(--surface);
+        border-radius: var(--radius-lg);
+        padding: 28px;
+        border: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .hero-capsule-panel::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          circle at 25% 20%,
+          rgba(143, 122, 254, 0.35),
+          transparent 65%
+        );
+        opacity: 0.8;
+        pointer-events: none;
+      }
+
+      .hero-capsule-panel > * {
+        position: relative;
+        z-index: 1;
+      }
+
+      .capsule-title {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        color: #c4c6f5;
+      }
+
+      .capsule-grid-wrapper {
+        max-height: 340px;
+        overflow-y: auto;
+      }
+
+      .capsule-grid-wrapper::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      .capsule-grid-wrapper::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+      }
+
+      .capsule-grid {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      }
+
+      .capsule-grid .btn {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 4px;
+        min-height: 82px;
+        text-align: left;
+        padding: 14px 18px;
+        line-height: 1.35;
+      }
+
+      .capsule-grid .btn .btn-heading {
+        font-size: 1rem;
+        font-weight: 600;
+      }
+
+      .capsule-grid .btn .btn-subtitle {
+        font-size: 0.82rem;
+        color: rgba(239, 240, 255, 0.76);
+      }
+
+      main {
+        padding: 0 24px 120px;
+      }
+
+      section {
+        max-width: var(--max-width);
+        margin: 0 auto 90px;
+        scroll-margin-top: 120px;
+      }
+
+      .section-heading {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 32px;
+      }
+
+      .section-heading-top {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .section-heading span {
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        font-size: 0.75rem;
+        color: #8187a8;
+      }
+
+      .section-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 18px;
+        border-radius: 999px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        background: linear-gradient(135deg, var(--accent), #4fc3ff);
+        color: #07111b;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 12px 32px rgba(143, 122, 254, 0.35);
+        text-transform: uppercase;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-family: "Space Grotesk", "Inter", sans-serif;
+        font-size: clamp(1.4rem, 2.8vw, 1.8rem);
+      }
+
+      .section-heading p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 100%;
+      }
+
+      .showcase-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      }
+
+      .card {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-height: 0;
+      }
+
+      #study .study-figure {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        padding: 16px;
+        max-width: 800px;
+        margin: 24px auto 0;
+      }
+
+      #study .study-figure img {
+        display: block;
+        width: 100%;
+        height: auto;
+        border-radius: var(--radius-sm);
+      }
+
+      #study .study-figure figcaption {
+        margin-top: 12px;
+        font-size: 0.9rem;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .card .label {
+        margin: 0;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        color: #858ac0;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 600;
+      }
+
+      .card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .media-pair {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+
+      .media-box {
+        background: var(--surface-alt);
+        border-radius: var(--radius-sm);
+        min-height: 0;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        display: grid;
+        place-items: center;
+        color: #6f7498;
+        font-size: 0.78rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        padding: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .media-box span {
+        z-index: 1;
+      }
+
+      .media-box img,
+      .media-box video {
+        width: calc(100% + 2px);
+        height: calc(100% + 2px);
+        object-fit: cover;
+        border-radius: inherit;
+        background: #000;
+      }
+
+      .instruction {
+        position: relative;
+        border-radius: var(--radius-sm);
+        background: rgba(143, 122, 254, 0.12);
+        border: 1px solid rgba(143, 122, 254, 0.25);
+        color: #c9c5ff;
+        font-size: 0.92rem;
+        padding: 16px 18px;
+        font-weight: 600;
+        cursor: default;
+        overflow: visible;
+      }
+
+      .instruction-text {
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+
+      .instruction::after {
+        content: attr(data-full-text);
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: calc(100% + 12px);
+        opacity: 0;
+        pointer-events: none;
+        transform: translateY(6px);
+        transition: opacity 0.15s ease, transform 0.15s ease;
+        background: rgba(24, 26, 52, 0.96);
+        color: #f6f5ff;
+        padding: 16px 20px;
+        border-radius: var(--radius-sm);
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        box-shadow: 0 18px 40px rgba(8, 10, 30, 0.45);
+        z-index: 5;
+        line-height: 1.6;
+        display: block;
+        white-space: normal;
+        max-width: 360px;
+      }
+
+      .instruction:hover::after {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .video-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 20px;
+        display: grid;
+        gap: 16px;
+      }
+
+      .video-card h4 {
+        margin: 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .video-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      #baseline-nature .video-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+      }
+
+      @media (max-width: 1100px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 720px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 500px) {
+        #baseline-nature .video-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .video-placeholder {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        background: rgba(20, 24, 48, 0.5);
+        overflow: hidden;
+      }
+
+      .video-placeholder video,
+      .video-placeholder img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .video-actions {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        display: flex;
+        gap: 8px;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        z-index: 2;
+      }
+
+      .video-placeholder:hover .video-actions,
+      .media-box:hover .video-actions,
+      .timing-media:hover .video-actions {
+        opacity: 1;
+      }
+
+      .video-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        background: rgba(10, 12, 28, 0.72);
+        color: #f4f4ff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        cursor: pointer;
+        text-decoration: none;
+      }
+
+      .video-action-btn svg {
+        width: 14px;
+        height: 14px;
+        fill: currentColor;
+      }
+
+      .video-action-btn:hover,
+      .video-action-btn:focus-visible {
+        background: rgba(20, 24, 48, 0.85);
+        border-color: rgba(255, 255, 255, 0.35);
+      }
+
+      .media-lightbox {
+        position: fixed;
+        inset: 0;
+        background: rgba(5, 7, 18, 0.82);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        z-index: 999;
+      }
+
+      .media-lightbox.is-open {
+        display: flex;
+      }
+
+      .media-lightbox__content {
+        position: relative;
+        width: min(960px, 90vw);
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      }
+
+      .media-lightbox__video {
+        display: block;
+        width: 100%;
+        height: auto;
+        background: #050712;
+      }
+
+      .media-lightbox__close {
+        display: none;
+      }
+
+      .comparison-tag {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        /* text-transform: uppercase; */
+        color: #f6f6ff;
+        pointer-events: none;
+      }
+
+      .comparison-tag-top {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        padding: 4px 8px;
+        border-radius: 10px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        /* text-transform: uppercase; */
+        color: #f6f6ff;
+        pointer-events: none;
+      }
+
+      .table-wrapper {
+        background: var(--surface);
+        border-radius: var(--radius-md);
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+      }
+
+      thead {
+        background: rgba(143, 122, 254, 0.12);
+      }
+
+      th,
+      td {
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+      }
+
+      tbody tr:last-child td {
+        border-bottom: none;
+      }
+
+      tbody tr:hover {
+        background: rgba(255, 255, 255, 0.02);
+      }
+
+      .table-dash-top td {
+        border-top: 1px dashed rgba(255, 255, 255, 0.28);
+      }
+
+      .table-dash-bottom td {
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.28);
+      }
+
+      mark {
+        background: rgba(143, 122, 254, 0.2);
+        color: var(--text);
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+      }
+
+      .method-grid {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .method-card {
+        padding: 24px;
+        border-radius: var(--radius-md);
+        background: var(--surface);
+        border: 1px solid var(--border);
+      }
+
+      .footer-cta {
+        background: linear-gradient(135deg, rgba(143, 122, 254, 0.25), rgba(79, 195, 255, 0.25));
+        border: 1px solid rgba(143, 122, 254, 0.35);
+        border-radius: var(--radius-lg);
+        padding: 48px;
+        text-align: center;
+      }
+
+      footer {
+        border-top: 1px solid var(--border);
+        padding: 32px 24px 60px;
+        text-align: center;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .comparison-media img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .timing-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      .timing-text {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0;
+      }
+
+      .timing-media {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        background: rgba(20, 24, 48, 0.5);
+      }
+
+      .timing-media img,
+      .timing-media video {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .timing-media--full {
+        grid-column: 1 / -1;
+      }
+
+      .timing-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .timing-tag {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        padding: 5px 10px;
+        border-radius: 12px;
+        background: rgba(12, 14, 28, 0.78);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #f6f6ff;
+      }
+
+      .partial-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 20px;
+      }
+
+      .partial-media {
+        position: relative;
+        border-radius: var(--radius-sm);
+        border: 1px dashed rgba(255, 255, 255, 0.14);
+        overflow: hidden;
+        background: rgba(20, 24, 48, 0.5);
+      }
+
+      .partial-media img,
+      .partial-media video {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      #teaser .partial-grid {
+        grid-template-columns: minmax(260px, 0.38fr) repeat(3, minmax(0, 1fr));
+        grid-auto-rows: auto;
+        gap: 18px;
+        align-items: start;
+      }
+
+      #teaser .partial-media {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #teaser .partial-media:first-child {
+        grid-row: 1 / span 2;
+      }
+
+      #teaser .partial-media img,
+      #teaser .partial-media video {
+        width: 100%;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
+      }
+
+      @media (max-width: 1024px) {
+        #teaser .partial-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          grid-auto-rows: minmax(200px, 1fr);
+        }
+
+        #teaser .partial-media:first-child {
+          grid-row: auto;
+          grid-column: 1 / -1;
+          min-height: 260px;
+        }
+      }
+
+      @media (max-width: 640px) {
+        #teaser .partial-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .timing-instruction {
+        display: block;
+      }
+
+      .partial-control-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 24px;
+        display: grid;
+        gap: 20px;
+      }
+
+      @media (max-width: 720px) {
+        .hero {
+          padding-top: 90px;
+        }
+
+        .hero-capsule-panel {
+          padding: 28px;
+        }
+
+        .capsule-grid .btn {
+          flex-basis: 100%;
+        }
+
+        nav ul {
+          display: none;
+        }
+
+        .media-pair {
+          gap: 14px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="top">
+
+      <section id="baseline-nature">
+        <div style="height: 34px;"></div>
+        <div class="section-heading">
+            <div class="section-heading-top">
+                <span>Controllable Natural Domain Cinemagraphs - Comparisons</span>
+                <a class="section-pill" href="../index.html#baseline-nature">HomePage</a>
+            </div>
+          <h2>Comparison of Our method with Baselines for Controllable Natural Domain Cinemagraphs</h2>
+          <p>
+            We compare our method with baselines for controllable natural domain cinemagraphs with 1 and 5 hint points.
+          </p>
+
+        </div>
+        <span class="instruction-text" style="display: block; text-align: center;">1 Hint Point</span>
+        </div>
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Input</span>
+              <img src="../our_results_nature/Inputs/1-hint/00980_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Animating Landscape</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/1-hint/00980_00000_loop.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Controllable Animation</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/1-hint/00980_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">SLR-SFS</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/1-hint/00980_00000_input_video.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Ours</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/1-hint/00980_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Input</span>
+              <img src="../our_results_nature/Inputs/1-hint/00984_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Animating Landscape</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/1-hint/00984_00000_loop.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Controllable Animation</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/1-hint/00984_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">SLR-SFS</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/1-hint/00984_00000_input_video.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Ours</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/1-hint/00984_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Input</span>
+              <img src="../our_results_nature/Inputs/1-hint/00990_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Animating Landscape</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/1-hint/00990_00000_loop.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Controllable Animation</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/1-hint/00990_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">SLR-SFS</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/1-hint/00990_00000_input_video.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Ours</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/1-hint/00990_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+          <div class="video-grid">
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Input</span>
+              <img src="../our_results_nature/Inputs/1-hint/01004_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Animating Landscape</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/1-hint/01004_00000_loop.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Controllable Animation</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/1-hint/01004_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">SLR-SFS</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/1-hint/01004_00000_input_video.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div class="video-placeholder">
+              <span class="comparison-tag-top">Ours</span>
+              <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/1-hint/01004_00000.mp4" type="video/mp4">
+              </video>
+            </div>
+          </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+
+        </div>
+        <span class="instruction-text" style="display: block; text-align: center;">5 Hint Point</span>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/00980_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/00980_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/00980_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/00980_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/00980_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/00985_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/00985_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/00985_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/00985_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/00985_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/00987_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/00987_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/00987_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/00987_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/00987_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/00989_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/00989_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/00989_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/00989_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/00989_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/00992_02124.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/00992_02124_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/00992_02124.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/00992_02124_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/00992_02124.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+        <div style="height: 20px;"></div>
+        <div class="video-card">
+        <div class="video-grid">
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Input</span>
+            <img src="../our_results_nature/Inputs/5-hint/01007_00000.png" alt="Input reference frame">
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Animating Landscape</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Animating-Landscape/5-hint/01007_00000_loop.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Controllable Animation</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Controllable-Animation/5-hint/01007_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">SLR-SFS</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/SLR-SFS/5-hint/01007_00000_input_video.mp4" type="video/mp4">
+            </video>
+            </div>
+            <div class="video-placeholder">
+            <span class="comparison-tag-top">Ours</span>
+            <video autoplay loop muted playsinline>
+                <source src="../our_results_nature/Our-Internal/5-hint/01007_00000.mp4" type="video/mp4">
+            </video>
+            </div>
+        </div>
+        </div>
+
+      </section>
+
+      <div class="media-lightbox" id="mediaLightbox" aria-hidden="true">
+        <div class="media-lightbox__content" role="dialog" aria-modal="true" aria-label="Expanded video preview">
+          <button class="media-lightbox__close" type="button" id="mediaLightboxClose" aria-label="Close preview">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path
+                d="M4.47 4.47a.75.75 0 011.06 0L8 6.94l2.47-2.47a.75.75 0 111.06 1.06L9.06 8l2.47 2.47a.75.75 0 11-1.06 1.06L8 9.06l-2.47 2.47a.75.75 0 01-1.06-1.06L6.94 8 4.47 5.53a.75.75 0 010-1.06z"
+                fill="currentColor"
+              />
+            </svg>
+          </button>
+          <video class="media-lightbox__video" id="mediaLightboxVideo" controls loop muted playsinline></video>
+        </div>
+      </div>
+
+    <script>
+      (function () {
+        const lightbox = document.getElementById("mediaLightbox");
+        const lightboxVideo = document.getElementById("mediaLightboxVideo");
+        const closeButton = document.getElementById("mediaLightboxClose");
+
+        const getVideoSrc = (video) => {
+          if (!video) return null;
+          const source = video.querySelector("source");
+          if (source && source.getAttribute("src")) {
+            return source.getAttribute("src");
+          }
+          return video.currentSrc || video.getAttribute("src") || null;
+        };
+
+        const closeLightbox = () => {
+          if (!lightbox || !lightboxVideo) return;
+          lightbox.classList.remove("is-open");
+          lightbox.setAttribute("aria-hidden", "true");
+          document.body.classList.remove("lightbox-open");
+          lightboxVideo.pause();
+          lightboxVideo.removeAttribute("src");
+          lightboxVideo.load();
+        };
+
+        const openLightbox = (video, src) => {
+          if (!lightbox || !lightboxVideo || !src) return;
+          lightboxVideo.loop = video.hasAttribute("loop");
+          lightboxVideo.muted = video.muted;
+          lightboxVideo.autoplay = true;
+          lightboxVideo.playsInline = true;
+          lightboxVideo.setAttribute("src", src);
+          lightboxVideo.load();
+          lightboxVideo.play().catch(() => {});
+          lightbox.classList.add("is-open");
+          lightbox.setAttribute("aria-hidden", "false");
+          document.body.classList.add("lightbox-open");
+        };
+
+        const attachActions = () => {
+          const videos = document.querySelectorAll(
+            ".video-placeholder video, .media-box video, .card video, .timing-media video"
+          );
+
+          videos.forEach((video) => {
+            const container = video.closest(
+              ".video-placeholder, .media-box, .card, .timing-media"
+            );
+            if (!container || container.dataset.actionsAttached === "true") {
+              return;
+            }
+
+            const src = getVideoSrc(video);
+            if (!src) return;
+
+            const actions = document.createElement("div");
+            actions.className = "video-actions";
+
+            const openLink = document.createElement("a");
+            openLink.className = "video-action-btn";
+            openLink.href = src;
+            openLink.target = "_blank";
+            openLink.rel = "noopener";
+            openLink.innerHTML =
+              '<svg viewBox="0 0 16 16" fill="none"><path d="M3.75 3.75h8.5v8.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M4 12l8.25-8.25" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Open</span>';
+
+            const enlargeBtn = document.createElement("button");
+            enlargeBtn.type = "button";
+            enlargeBtn.className = "video-action-btn";
+            enlargeBtn.innerHTML =
+              '<svg viewBox="0 0 16 16" fill="none"><path d="M6 3.5H4A.5.5 0 003.5 4v2M10 3.5h2a.5.5 0 01.5.5v2M6 12.5H4a.5.5 0 01-.5-.5v-2M10 12.5h2a.5.5 0 00.5-.5v-2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Enlarge</span>';
+
+            enlargeBtn.addEventListener("click", () => openLightbox(video, src));
+
+            actions.appendChild(openLink);
+            actions.appendChild(enlargeBtn);
+            container.appendChild(actions);
+            container.dataset.actionsAttached = "true";
+          });
+        };
+
+        if (closeButton) {
+          closeButton.addEventListener("click", closeLightbox);
+        }
+
+        if (lightbox) {
+          lightbox.addEventListener("click", (event) => {
+            if (event.target === lightbox) {
+              closeLightbox();
+            }
+          });
+        }
+
+        document.addEventListener("keydown", (event) => {
+          if (event.key === "Escape") {
+            closeLightbox();
+          }
+        });
+
+        attachActions();
+      })();
+    </script>
+    <footer>
+      DreamLoop · Controllable Cinemagraph Generation from a Single Photograph
+    </footer>
+  </body>
+</html>
+
+
